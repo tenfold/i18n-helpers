@@ -15,7 +15,7 @@ const INPUT_DIR = './input'
 function run(prefix) {
   let allTranslations = [];
 
-  const inputFiles = fs.readdirSync('../input');
+  const inputFiles = fs.readdirSync('./input');
 
   console.log(`Found ${inputFiles.length} files.`);
   for (let inputFile of inputFiles) {
@@ -45,19 +45,19 @@ function run(prefix) {
  */
 function searchForTranslations(text, prefix) {
   // "Tooltip" attribute occurences
-  const tooltipRegex = new RegExp(`(?:tooltip=")((?!${prefix}\.).*?)(?:")`, 'g');
+  const tooltipRegex = new RegExp(`(?:tooltip=")((?!${prefix}\.)(\\w|\\s|\.)+?)(?:")`, 'g');
   const tooltips = getTranslatedElements(tooltipRegex, text, prefix);
 
   console.log(`Found ${tooltips.length} tooltip attributes to translate`);
 
   // "Title" attribute occurences
-  const titleRegex = new RegExp(`(?:title=")((?!${prefix}\.).*?)(?:")`, 'g');
+  const titleRegex = new RegExp(`(?:title=")((?!${prefix}\.)(\\w|\\s|\.)+?)(?:")`, 'g');
   const titles = getTranslatedElements(titleRegex, text, prefix);
 
   console.log(`Found ${titles.length} title attributes to translate`);
 
   // Occurences in tags
-  const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)(\\w|\\s)+?)(?:\\n*<)`, 'g');
+  const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)(\\w|\\s|\.)+?)(?:\\n*<)`, 'g');
   const tags = getTranslatedElements(tagRegex, text, prefix);
 
   console.log(`Found ${tags.length} tags with text to translate`);
