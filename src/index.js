@@ -6,6 +6,8 @@ const {
   saveTranslations
 } = require('./files');
 
+const INPUT_DIR = './input'
+
 /**
  * Runs the translation replacer
  * @param  {String} prefix Prefix to use for translation keys
@@ -13,7 +15,7 @@ const {
 function run(prefix) {
   let allTranslations = [];
 
-  const inputFiles = fs.readdirSync('./input');
+  const inputFiles = fs.readdirSync('../input');
 
   console.log(`Found ${inputFiles.length} files.`);
   for (let inputFile of inputFiles) {

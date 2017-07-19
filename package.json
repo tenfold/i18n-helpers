@@ -4,8 +4,12 @@
   "description": "Helper to search for i18n occurences",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon main.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -rf ./lib && babel src -d lib --ignore *.test.js",
+    "coverage": "jest --coverage",
+    "codacy": "npm run coverage && cat ./coverage/lcov.info | codacy-coverage && rm -rf ./coverage",
+    "lint": "eslint --fix src",
+    "prepublish": "npm run build",
+    "test": "jest"
   },
   "keywords": [
     "i18n",
@@ -13,12 +17,19 @@
     "helper"
   ],
   "author": "Bartek Polanczyk <bartosz@tenfold.com>",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "dependencies": {
     "inquirer": "^3.2.0",
     "lodash": "^4.17.4"
   },
   "devDependencies": {
-    "nodemon": "^1.11.0"
+    "babel-cli": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-jest": "^20.0.3",
+    "babel-preset-env": "^1.6.0",
+    "codacy-coverage": "^2.0.2",
+    "eslint": "^4.2.0",
+    "eslint-config-google": "^0.9.1",
+    "jest": "^20.0.4"
   }
 }
