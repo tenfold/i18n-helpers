@@ -14,11 +14,13 @@ var questions = [
   }
 ];
 
-inquirer.prompt(questions).then(function (answers) {
+inquirer.prompt(questions).then((answers) => {
   let {prefix} = answers;
   prefix = prefix || 'i18n';
 
   console.log(`Running with prefix: ${prefix}`);
 
   run(prefix);
+}).catch((err) => {
+  console.log(err);
 });

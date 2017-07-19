@@ -57,7 +57,7 @@ function searchForTranslations(text, prefix) {
   console.log(`Found ${titles.length} title attributes to translate`);
 
   // Occurences in tags
-  const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)(\\w|\\s|\.)+?)(?:\\n*<)`, 'g');
+  const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)(\\w|\\s|\\.)+?)(?:\\n*<)`, 'g');
   const tags = getTranslatedElements(tagRegex, text, prefix);
 
   console.log(`Found ${tags.length} tags with text to translate`);
