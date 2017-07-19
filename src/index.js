@@ -1,6 +1,8 @@
 const _ = require('lodash');
 const fs = require('fs');
 
+const commonPhrases = require('../common.json');
+
 const {
   saveOutputFile,
   saveTranslations
@@ -102,8 +104,10 @@ function buildTranslationObject (prefix, result, replacementFunction) {
   const text = _.trim(result[1]);
   const context = result[0];
 
-  if (text !== '') {
-    const key = `${prefix}.${_.kebabCase(text)}`;
+  const sluggifiedText = _.kebabCase(text)
+
+  if (text !== '' && !commonPhrases[sluggifiedText]) {
+    const key = `${prefix}.${sluggifiedText}`;
     const object = {
       key,
       context,
