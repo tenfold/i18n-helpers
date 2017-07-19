@@ -15,7 +15,9 @@ function saveOutputFile(text, translations, fileName) {
 
   for (let translation of translations) {
     const regExp = new RegExp(translation.context, 'ig');
+
     text = text.replace(regExp,
+      translation.replacement ||
       translation.context.replace(translation.text, translation.key));
   }
   console.log('Translations injected into original file.');

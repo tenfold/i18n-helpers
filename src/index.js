@@ -46,19 +46,22 @@ function run(prefix) {
 function searchForTranslations(text, prefix) {
   // "Tooltip" attribute occurences
   const tooltipRegex = new RegExp(`(?:tooltip=")((?!${prefix}\.)(\\w|\\s|\.)+?)(?:")`, 'g');
-  const tooltips = getTranslatedElements(tooltipRegex, text, prefix);
+  const tooltipReplacementFunction = (text, context, key) => ` ng-i18next="[tooltip]${key}"`;
+  const tooltips = getTranslatedElements(tooltipRegex, text, prefix, tooltipReplacementFunction);
 
   console.log(`Found ${tooltips.length} tooltip attributes to translate`);
 
   // "Title" attribute occurences
   const titleRegex = new RegExp(`(?:title=")((?!${prefix}\.)(\\w|\\s|\.)+?)(?:")`, 'g');
+  const titleReplacementFunction = (text, context, key) => ` ng-i18next="[title]${key}"`;
   const titles = getTranslatedElements(titleRegex, text, prefix);
 
   console.log(`Found ${titles.length} title attributes to translate`);
 
   // Occurences in tags
   const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)(\\w|\\s|\\.)+?)(?:\\n*<)`, 'g');
-  const tags = getTranslatedElements(tagRegex, text, prefix);
+  const tagReplacementFunction = (text, context, key) => ` ng-i18next="${key}"><`;
+  const tags = getTranslatedElements(tagRegex, text, prefix, tagReplacementFunction);
 
   console.log(`Found ${tags.length} tags with text to translate`);
 
@@ -75,12 +78,12 @@ function searchForTranslations(text, prefix) {
  * @param  {String} prefix Prefix to use when building
  * @return {Array}         Detected translations
  */
-function getTranslatedElements(regExp, text, prefix) {
+function getTranslatedElements(regExp, text, prefix, replacementFunction) {
   const elements = [];
 
   let result;
   while(result = regExp.exec(text)){
-    const translationEntry = buildTranslationObject(prefix, result);
+    const translationEntry = buildTranslationObject(prefix, result, replacementFunction);
     if (translationEntry) {
       elements.push(translationEntry);
     }
@@ -95,16 +98,23 @@ function getTranslatedElements(regExp, text, prefix) {
  * @param  {Object} result RegExp result
  * @return {Object}        Resulting object
  */
-function buildTranslationObject (prefix, result) {
+function buildTranslationObject (prefix, result, replacementFunction) {
   const text = _.trim(result[1]);
   const context = result[0];
 
   if (text !== '') {
-    return {
-      key: `${prefix}.${_.kebabCase(text)}`,
+    const key = `${prefix}.${_.kebabCase(text)}`;
+    const object = {
+      key,
       context,
       text
     }
+
+    if (replacementFunction) {
+      object.replacement = replacementFunction(text, context, key);
+    }
+
+    return object;
   }
 }
 
