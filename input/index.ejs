@@ -1,0 +1,1808 @@
+<% layout(layoutDashboard) %>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<div class="container an-container"
+     ng:controller="AnalyticsController as ctrl"
+     ng-class="{'loading-data': ctrl.loading, 'single-user': ctrl.selectedUser}">
+
+    <div class="row main-toolbar">
+        <div class="col-xs-12">
+            <ul class="nav nav-pills weak">
+                <li ng-class="(ctrl.selectedUser === false && ctrl.selectedTeam === false && ctrl.groupByTeams === false) && 'active'">
+                    <a ng-click="ctrl.queryOrg()" title="View company-wide analytics">Company</a>
+                </li>
+                <li ng-class="ctrl.groupByTeams && 'active'" ng-hide="!ctrl.teams || !ctrl.teams.length">
+                    <a ng-click="ctrl.queryTeams()" title="View company-wide analytics grouped by teams">Teams</a>
+                <li>
+
+                </li>
+                <li class="dropdown" ng-class="ctrl.selectedTeam && 'active'" ng-hide="!ctrl.teams || !ctrl.teams.length">
+                    <a class="dropdown-toggle"
+                       type="button"
+                       id="dropdownMenu1"
+                       aria-expanded="false"
+                       title="View analytics for a specific team">
+                        <text ng-bind-html="ctrl.selectedTeamName || 'Team'"></text>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li ng-repeat="team in ctrl.teams">
+                            <a ng-bind-html="team.name"
+                               ng-click="ctrl.queryTeam(team)"
+                               href="javascript:void(0);">
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="dropdown dropdown-scroll"
+                    ng-class="ctrl.selectedUser && ctrl.selectedUser !== ctrl.user._id && 'active'">
+                    <a class="dropdown-toggle ng-cloak"
+                       type="button"
+                       id="dropdownMenu2"
+                       aria-expanded="false"
+                       title="View analytics for an individual user">
+                        <text ng-bind-html="(ctrl.selectedUserName && (ctrl.selectedUser !== ctrl.user._id))
+                           ? ctrl.selectedUserName : 'Users'"></text>
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                        <li role="presentation" prevent-click>
+                            <div class="input-group input-group-sm search-control"> <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-search"></span></span>
+                                <input type="text" class="form-control" placeholder="Search" ng-model="userQuery"></input>
+                            </div>
+                        </li>
+                        <li role="presentation" ng-repeat='user in ctrl.orgUsers | filter:userQuery'>
+                            <a ng-bind-html="user.name"
+                               ng-click="ctrl.queryUser(user)"
+                               href="javascript:void(0);"
+                               ng-hide="ctrl.user._id === user._id">
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li ng-class="(ctrl.selectedUser === ctrl.user._id) && 'active'">
+                    <a ng-click="ctrl.queryUser(ctrl.user)"
+                       title="View your personal analytics">You</a>
+                </li>
+                <% if(typeof isUserSuperAdmin !== 'undefined' && isUserSuperAdmin) { %>
+                <li>
+                    <select id="orgOverride" name="orgOverride" ng-model="ctrl.orgOverride">
+                        <option value="" disabled selected>Org override</option>
+                        <% for(var i = 0; i < organizationList.length; i++
+                        ) { %>
+                        <option data-timezone="<%= organizationList[i].timezone %>"
+                                value="<%= organizationList[i]._id %>"><%= organizationList[i].company %></option>
+                        <% } %>
+                    </select>
+                </li>
+                <% } %>
+            </ul>
+            <ul class="nav nav-pills weak navbar-right">
+                <li class="time-frame">
+                    <input date-range-picker
+                        type="text"
+                        placeholder=" This Year"
+                        options="ctrl.timeRangeOpts"
+                        ng-model="ctrl.timeRange" />
+                    <span class="fa fa-calendar"></span>
+                </li>
+                <% if(reports && reports.length){ %>
+                <li class="dropdown timezone">
+                    <a class="dropdown-toggle"
+                       type="button"
+                       href="#"
+                       tooltip-placement="bottom"
+                       tooltip="Reports">
+                        <span class="fa fa-file-excel-o"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <% for(var i = 0; i < reports.length; i++) { %>
+                            <li>
+                                <a ng-click="ctrl.runReport('<%= reports[i] %>')">
+                                    <text ng-bind="'<%= reports[i] %>' | capitalize"></text>
+                                    <span class="fa"
+                                          ng-class="ctrl.report && ctrl.report['<%= reports[i] %>'] && ctrl.report['<%= reports[i] %>'].class">
+                                    </span>
+                                </a>
+                            </li>
+                        <% } %>
+                    </ul>
+                </li>
+                <% } %>
+                <li class="dropdown timezone">
+                    <a class="dropdown-toggle"
+                       type="button"
+                       aria-expanded="false"
+                       tooltip-placement="bottom"
+                       tooltip="Timezone"
+                       title="Change your analytics timezone">
+                        <span class="fa fa-globe"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-header">Timezone</li>
+                        <li>
+                            <a ng-click="ctrl.customTimeZoneChange('company')"
+                               href="javascript:void(0);" >
+                               Company default
+                            </a>
+                        </li>
+                        <li>
+                            <a ng-click="ctrl.customTimeZoneChange('local')"
+                               href="javascript:void(0);" >
+                               Local time
+                            </a>
+                        </li>
+                        <li role="separator" class="divider"></li>
+                        <li class="dropdown-header">Custom</li>
+                        <li class="custom" prevent-click>
+                            <select ng-model="ctrl.customTimeZone"
+                                    ng-options="tz as tz.value for tz in ctrl.customTimeZones track by tz.value"
+                                    close-dropdown-on-select
+                                    listen="ctrl.customTimeZone">
+                            </select>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <section ng-show="ctrl.totals.calls" class="ng-cloak">
+
+        <div class="row metrics leaderboard" ng-show="ctrl.leaderboard.length && !ctrl.selectedUser && ctrl.userTable.length">
+            <div class="col-xs-12 divider-title">
+                <div><div>Leaderboard</div></div>
+            </div>
+            <div ng-repeat="entry in ctrl.leaderboard" ng-class="'col-xs-{{12/(ctrl.leaderboard.length || 1)}}'">
+                <div class="metric">
+                    <div class="icon"><span ng-class="entry.icon" class="fa"></span></div>
+                    <div class="title" ng-bind-html="entry.categoryTitle"></div>
+                    <div class="name" ng-bind-html="entry.name"></div>
+                    <div class="desc" ng-bind-html="entry.categoryDescription"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row metrics numeric-stats">
+            <div class="col-xs-12 col-sm-3">
+                <div class="metric m1">
+                    <div class="title">Total Calls</div>
+                    <div class="number" ng-bind="ctrl.totals.calls | number"></div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-3">
+                <div class="metric m2">
+                    <div class="title">Inbound Calls</div>
+                    <div class="number" ng-bind="ctrl.totals.inbound.calls | number"></div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-3">
+                <div class="metric m3">
+                    <div class="title">Outbound Calls</div>
+                    <div class="number" ng-bind="ctrl.totals.outbound.calls | number"></div>
+                </div>
+            </div>
+            <div class="col-xs-12 col-sm-3">
+                <div class="metric m4">
+                    <div class="title">Total Time</div>
+                    <div class="number" ng-bind="ctrl.totals.duration | duration"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row graph-wrap">
+            <div class="col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Calls Graph</h3>
+                          <span class="modalTriggerBtn">
+                            <i class="fa fa-info-circle" style="
+                            padding-left: 10px;
+                            position: relative;
+                            color: #7B7F8E;" ng-click="showCallStatModal()"></i>
+                        </span>
+                        <ul class="nav nav-pills weak pull-up">
+                            <li class="btn-group">
+                                <button type="button"
+                                        class="btn"
+                                        ng-class="{active: !ctrl.graphTalkTime}"
+                                        ng-click="ctrl.refreshGraph(null, null, false)">
+                                    Number of calls
+                                </button>
+                                <button type="button"
+                                        class="btn"
+                                        ng-class="{active: ctrl.graphTalkTime}"
+                                        ng-click="ctrl.refreshGraph(null, null, true)"
+                                        ng-bind="ctrl.orgPrefTalkTime ? 'Talk time' : 'Call time'">
+                                    Call time
+                                </button>
+                            </li>
+
+                            <li class="btn-group">
+                                <button ng-repeat="range in ctrl.timeRanges"
+                                        type="button"
+                                        class="btn"
+                                        ng-class="{active: ctrl.selectedTimeRange === range.key}"
+                                        ng-bind="range.label"
+                                        ng-click="ctrl.refreshGraph(range.key)"></button>
+                            </li>
+
+                            <li class="btn-group" ng-hide="ctrl.groupByTeams">
+                                <button type="button"
+                                        class="btn"
+                                        ng-class="{active: ctrl.graphByUser}"
+                                        ng-click="ctrl.refreshGraph(null, !ctrl.graphByUser)">
+                                    Group by user
+                                </button>
+                            </li>
+
+                            <li>
+                                <a class="export" fullscreen=".graph-wrap" reflow="ctrl.highchartsReflow">Full Screen</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="panel-body highchart-panel">
+                        <highchart config="ctrl.highchartObj"></highchart>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row single-user-wrapper" ng-show="ctrl.selectedUser">
+            <div class="col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"
+                            ng-bind="ctrl.selectedUserName || 'User table'">
+                        </h3>
+                    </div>
+                    <div class="panel-body table-panel">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th colspan="5">Totals</th>
+                                    <th class="left-border" colspan="4" hide-in>Inbound</th>
+                                    <th class="left-border" colspan="4" hide-out>Outbound</th>
+                                </tr>
+                                <tr class="individual">
+                                    <th>Calls</th>
+                                    <th>Time</th>
+                                    <th>Avg Time</th>
+                                    <th>Notes</th>
+                                    <th>CRM</th>
+                                    <th class="left-border">Calls</th>
+                                    <th>Long Calls</th>
+                                    <th>Answered</th>
+                                    <th>Time</th>
+                                    <th class="left-border">Calls</th>
+                                    <th>Long Calls</th>
+                                    <th>Time</th>
+                                    <th>Connects</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td ng-bind="ctrl.userTable[0].calls | number"></td>
+                                    <td ng-bind="ctrl.userTable[0].duration | duration"></td>
+                                    <td ng-bind="ctrl.userTable[0].avgDuration | duration"></td>
+                                    <td ng-bind="ctrl.userTable[0].notes | number"></td>
+                                    <td ng-bind="ctrl.userTable[0].crmMatchRate/100 | percentage :1"></td>
+                                    <td ng-bind="ctrl.userTable[0].inbound.calls | number" class="left-border"></td>
+                                    <td ng-bind="ctrl.userTable[0].inbound.longCalls | number"></td>
+                                    <td ng-bind="ctrl.userTable[0].inbound.answered | number"></td>
+                                    <td ng-bind="ctrl.userTable[0].inbound.duration | duration"></td>
+                                    <td ng-bind="ctrl.userTable[0].outbound.calls | number" class="left-border"></td>
+                                    <td ng-bind="ctrl.userTable[0].outbound.longCalls | number"></td>
+                                    <td ng-bind="ctrl.userTable[0].outbound.duration | duration"></td>
+                                    <td ng-bind="ctrl.userTable[0].outbound.connectRate/100 | percentage :1"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <div class="row user-table-wrapper" ng-hide="ctrl.selectedUser">
+            <div class="col-xs-12">
+                <div class="panel panel-default" tf-switcher tf-on-switch="ctrl.renderTable" tf-tv-mode-default="ctrl.tvTfOpt">
+                    <div class="panel-heading">
+                        <h3 class="panel-title" ng-bind="(ctrl.groupByTeams ? 'Teams' : 'User') + ' table'"></h3>
+                        <span class="modalTriggerBtn">
+                            <i class="fa fa-info-circle" style="
+                            padding-left: 10px;
+                            position: relative;
+                            color: #7B7F8E;" ng-click="showCallStatModal()"></i>
+                        </span>
+                        <ul class="nav nav-pills weak pull-up user-actions">
+                            <% if(advancedAnalytics){ %>
+                            <li tf-switch="leads" tf-switch-default>
+                                <a>Leads</a>
+                            </li>
+                            <% } %>
+                            <li tf-switch="outbound" <% if(!advancedAnalytics){ %> tf-switch-default <% } %>>
+                                <a>Outbound</a>
+                            </li>
+                            <li tf-switch="inbound">
+                                <a>Inbound</a>
+                            </li>
+                            <li class="dropdown">
+                                <a class="export dropdown-toggle"
+                                   href="#"
+                                   aria-haspopup="true" aria-expanded="false">
+                                    Export
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li>
+                                        <a class="export-email-csv"
+                                            lazy-load="true"
+                                            ng-click="ctrl.exportEmailUserTable()">
+                                            Send to Email
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="export-download-csv"
+                                           lazy-load="true"
+                                           filename="export.csv"
+                                           ng-csv="ctrl.getTableExport()"
+                                           csv-header="ctrl.tableExportHeader()">
+                                            Download as CSV
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    </div>
+                    <scrollable-table watch="ctrl.userTable"
+                                      class="table-panel"
+                                      ng-class="{'hide-target': !ctrl.targetsEnabled}">
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th colspan="5">Totals</th>
+                                    <% if(advancedAnalytics){ %>
+                                    <th class="left-border" colspan="4" hide-leads>Leads</th>
+                                    <% } %>
+                                    <th class="left-border" ng-attr-colspan="{{ctrl.targetsEnabled ? 6 : 4}}" hide-in>Inbound</th>
+                                    <th class="left-border" ng-attr-colspan="{{ctrl.targetsEnabled ? 6 : 4}}" hide-out>Outbound</th>
+                                </tr>
+                                <tr>
+                                    <th sortable-header col="name" class="name-cell">Name</th>
+                                    <th sortable-header col="calls">Calls</th>
+                                    <th sortable-header col="duration">Time</th>
+                                    <th sortable-header col="avgDuration" style="min-width: 75px">Avg Time</th>
+                                    <th sortable-header col="notes" style="min-width: 55px">Notes</th>
+                                    <th sortable-header col="crmMatchRate">CRM</th>
+
+                                    <% if(advancedAnalytics){ %>
+                                    <th hide-leads class="left-border">Calls</th>
+                                    <th hide-leads>Connects</th>
+                                    <th hide-leads>Emails</th>
+                                    <!--th hide-leads >Follow-Ups</th-->
+                                    <th hide-leads style="min-width: 100px">Avg Resp Time</th>
+                                    <% } %>
+
+                                    <th sortable-header col="inbound.calls" class="left-border">Calls</th>
+                                    <th sortable-header col="inboundCallTarget">Target</th>
+                                    <th sortable-header col="inbound.longCalls" style="min-width: 85px">Long Calls</th>
+                                    <th sortable-header col="inbound.answered" style="min-width: 80px">Answered</th>
+                                    <th sortable-header col="inbound.duration">Time</th>
+                                    <th sortable-header col="inboundTimeTarget">Target</th>
+
+                                    <th sortable-header col="outbound.calls" class="left-border">Calls</th>
+                                    <th sortable-header col="outboundCallTarget">Target</th>
+                                    <th sortable-header col="outbound.longCalls" style="min-width: 85px">Long Calls</th>
+                                    <th sortable-header col="outbound.duration">Time</th>
+                                    <th sortable-header col="outboundTimeTarget">Target</th>
+                                    <th sortable-header col="outbound.connectRate" style="min-width: 75px">Connects</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="user in ctrl.userTable">
+                                    <td>
+                                        <a ng-bind-html="user.name"
+                                           ng-click="ctrl.groupByTeams ? ctrl.queryTeam(user) : ctrl.queryUser(user)">
+                                        </a>
+                                    </td>
+                                    <td ng-bind="user.calls | number"></td>
+                                    <td ng-bind="user.duration | duration"></td>
+                                    <td ng-bind="user.avgDuration | duration"></td>
+                                    <td ng-bind="user.notes | number"></td>
+                                    <td ng-bind="user.crmMatchRate/100 | percentage :1"></td>
+                                    <% if(advancedAnalytics){ %>
+                                    <td hide-leads class="left-border" ng-bind="user.leadCalls || 0"></td>
+                                    <td hide-leads ng-bind="user.leadConnects || 0"></td>
+                                    <td hide-leads ng-bind="user.leadEmails || 0"></td>
+                                    <td hide-leads
+                                        ng-bind="user.avgResponseTime ? ((user.avgResponseTime | duration ) + ' (' + user.responseTimeCalls + ')') : '-'">
+                                    </td>
+                                    <% } %>
+
+                                    <td ng-bind="user.inbound.calls | number" class="left-border"></td>
+                                    <td hide-target hide-in>
+                                        <a ng-bind="user.inboundCallTarget | number"
+                                           ng-click="ctrl.editTargetModal(user, 'inboundCallTarget')">
+                                        </a>
+                                    </td>
+                                    <td ng-bind="user.inbound.longCalls | number"></td>
+                                    <td ng-bind="user.inbound.answered | number"></td>
+                                    <td ng-bind="user.inbound.duration | duration"></td>
+                                    <td hide-target hide-in>
+                                        <a ng-bind="user.inboundTimeTarget * 60000 | duration"
+                                           ng-click="ctrl.editTargetModal(user, 'inboundTimeTarget')">
+                                        </a>
+                                    </td>
+
+                                    <td ng-bind="user.outbound.calls | number" class="left-border"></td>
+                                    <td hide-target hide-out>
+                                        <a ng-bind="user.outboundCallTarget | number"
+                                           ng-click="ctrl.editTargetModal(user, 'outboundCallTarget')">
+                                        </a>
+                                    </td>
+                                    <td ng-bind="user.outbound.longCalls | number"></td>
+                                    <td ng-bind="user.outbound.duration | duration"></td>
+                                    <td hide-target hide-out>
+                                        <a ng-bind="user.outboundTimeTarget * 60000 | duration"
+                                           ng-click="ctrl.editTargetModal(user, 'outboundTimeTarget')">
+                                        </a>
+                                    </td>
+                                    <td ng-bind="user.outbound.connectRate/100 | percentage :1"></td>
+                                </tr>
+                                <tr class="totals" ng-hide="ctrl.userTable.length === 1">
+                                    <td>Totals</td>
+                                    <td ng-bind="ctrl.totals.calls | number"></td>
+                                    <td ng-bind="ctrl.totals.duration | duration"></td>
+                                    <td ng-bind="ctrl.totals.avgDuration | duration"></td>
+                                    <td ng-bind="ctrl.totals.notes | number"></td>
+                                    <td ng-bind="ctrl.totals.crmMatchRate/100 | percentage :1"></td>
+
+                                    <% if(advancedAnalytics){ %>
+                                    <td hide-leads class="left-border" ng-bind="(ctrl.totals.leadCalls | number) || 0"></td>
+                                    <td hide-leads ng-bind="(ctrl.totals.leadConnects | number) || 0"></td>
+                                    <td hide-leads ng-bind="(ctrl.totals.leadEmails | number) || 0"></td>
+                                    <td hide-leads
+                                        ng-bind="ctrl.advanced.worstAvgResponseTime ? (ctrl.advanced.worstAvgResponseTime | duration) : '-'">
+                                    </td>
+                                    <% } %>
+
+                                    <td class="left-border" ng-bind="ctrl.totals.inbound.calls | number"></td>
+                                    <td hide-in hide-target>-</td>
+                                    <td ng-bind="ctrl.totals.inbound.longCalls | number"></td>
+                                    <td ng-bind="ctrl.totals.inbound.answered | number"></td>
+                                    <td ng-bind="ctrl.totals.inbound.duration | duration"></td>
+                                    <td hide-in hide-target>-</td>
+
+                                    <td class="left-border" ng-bind="ctrl.totals.outbound.calls | number"></td>
+                                    <td hide-out hide-target>-</td>
+                                    <td ng-bind="ctrl.totals.outbound.longCalls | number"></td>
+                                    <td ng-bind="ctrl.totals.outbound.duration | duration"></td>
+                                    <td hide-out hide-target>-</td>
+                                    <td ng-bind="ctrl.totals.outbound.connectRate/100 | percentage :1"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </scrollable-table>
+                </div>
+            </div>
+        </div>
+
+        <div class="row history-wrapper"
+             ng-show="ctrl.selectedUser"
+             ng-class="{'loading-history': ctrl.totals.calls && !ctrl.userHistory.length}">
+            <div class="col-xs-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Call History</h3>
+                        <% if(!hideExport){ %>
+                        <ul class="nav nav-pills weak pull-up user-actions" ng-hide="ctrl.exported || ctrl.exporting || ctrl.exportError">
+                            <li ng-show="ctrl.userHistory.length === 200" class="truncated">
+                                Displaying the first 200 results. Narrow the time frame or export the data.
+                            </li>
+                            <li> <a class="export" ng-click="ctrl.exportHistory()">Export to Email</a> </li>
+                        </ul>
+                        <ul class="nav nav-pills weak pull-up user-actions" ng-show="ctrl.exported || ctrl.exporting || ctrl.exportError">
+                            <li class="truncated" ng-show="ctrl.exported">
+                                Success! The data will be sent to your email address.
+                            </li>
+                            <li class="truncated" ng-show="ctrl.exporting">
+                                Crunching the numbers...
+                            </li>
+                            <li class="truncated" ng-show="ctrl.exportError">
+                                Exporting failed. Please try again later.
+                            </li>
+                        </ul>
+                        <% } %>
+                    </div>
+                    <div class="panel-body" ng-if="ctrl.userHistory">
+                        <scrollable-table watch="ctrl.userHistory" resizable class="call-history">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th sortable-header col="startTime" class="time-cell">Time</th>
+                                        <th sortable-header col="direction">Direction</th>
+                                        <th sortable-header col="userDevice">Extension</th>
+                                        <th sortable-header col="phoneNumber">Number</th>
+                                        <th sortable-header col="duration" style="min-width: 55px">Time</th>
+                                        <th sortable-header col="crmRecordId" style="min-width: 65px">CRM</th>
+                                        <th style="min-width: 150px">Contact</th>
+                                        <th sortable-header col="description">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="call in ctrl.userHistory">
+                                        <td ng-bind="call.startTime | momentDateFormat : 'M/DD h:mma'"></td>
+                                        <td ng-bind="call.direction"></td>
+                                        <td ng-bind="call.userDevice"></td>
+                                        <td ng-bind="call.phoneNumber | maskExtensionDigits"></td>
+                                        <td ng-bind="call[ctrl.getDurationProperty()] | duration"></td>
+                                        <td>
+                                            <span ng-bind="call.crmRecordId ? 'Y' : ''"></span>
+                                            <tenfold-crm-errors ng-if="isSuperAdmin" errors="call.crmErrors"></tenfold-crm-errors>
+                                        </td>
+                                        <td ng-bind-html="call.matchedCrmRecords | crmrecord"></td>
+                                        <td ng-bind="call.description || 'No note'"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </scrollable-table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <% if(advancedAnalytics){ %>
+        <div class="row leads">
+            <div class="col-xs-12 divider-title">
+                <div><div>Leads</div></div>
+            </div>
+
+            <div class="row squares">
+                <div class="col-xs-12 col-sm-3">
+                    <div class="square">
+                        <div class="title">New Leads</div>
+                        <div class="number">
+                            <span ng-bind="ctrl.advanced.newLeads | number"></span>
+                            <comparison percentage="ctrl.advanced.percentages.newLeads" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-3">
+                    <div class="square">
+                        <div class="title">New Leads Not Called</div>
+                        <div class="number">
+                            <span ng-bind="ctrl.advanced.newNotCalled | number"></span>
+                            <comparison lower-is-better="true" percentage="ctrl.advanced.percentages.newNotCalled" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-3">
+                    <div class="square">
+                        <div class="title">Leads Called</div>
+                        <div class="number">
+                            <span ng-bind="ctrl.advanced.calledLeads | number"></span>
+                            <comparison percentage="ctrl.advanced.percentages.calledLeads" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-3">
+                    <div class="square">
+                        <div class="title">Converted Leads</div>
+                        <div class="number">
+                            <span ng-bind="ctrl.advanced.convertedLeads | number"></span>
+                            <comparison percentage="ctrl.advanced.percentages.convertedLeads" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-12">
+                <div class="panel panel-default" ng-switch="ctrl.filterTab">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Average Response Time</h3>
+                        <ul class="nav nav-pills weak pull-up">
+                            <li ng-class="{active: !ctrl.filterTab}">
+                                <a ng-click="ctrl.filterTab = false">Averages</a>
+                            </li>
+                            <li ng-class="{active: ctrl.filterTab}">
+                                <a ng-click="ctrl.filterTab = true">Filters</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="panel-body panel-leads" ng-switch-default>
+                        <div class="row">
+                            <div class="col-xs-12 col-md-4 response">
+                                <div class="title">Best</div>
+                                <div class="value">
+                                    <response-time value="ctrl.advanced.bestAvgResponseTime"> </response-time>
+                                    <comparison hide="!ctrl.advanced.bestAvgResponseTime"
+                                                lower-is-better="true"
+                                                percentage="ctrl.advanced.percentages.bestAvgResponseTime"/>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-md-4 response"
+                                 tooltip-placement="top"
+                                 tooltip="50th percentile under worst threshold.">
+                                <div class="title">
+                                    Median
+                                    <span class="fa fa-info-circle"></span>
+                                </div>
+                                <div class="value">
+                                    <response-time value="ctrl.advanced.medianAvgResponseTime"> </response-time>
+                                    <comparison hide="!ctrl.advanced.medianAvgResponseTime"
+                                                lower-is-better="true"
+                                                percentage="ctrl.advanced.percentages.medianAvgResponseTime" />
+                                </div>
+                                <div class="advice">
+                                    Keep your avg response time under
+                                    <span class="high">5 minutes</span>
+                                    to dramatically improve lead conversion
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-md-4 response">
+                                <div class="title">Worst</div>
+                                <div class="value">
+                                    <response-time value="ctrl.advanced.worstAvgResponseTime"> </response-time>
+                                    <comparison hide="!ctrl.advanced.worstAvgResponseTime"
+                                                lower-is-better="true"
+                                                percentage="ctrl.advanced.percentages.worstAvgResponseTime" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body panel-leads" ng-switch-when="true">
+                        <div class="row">
+                            <div class="col-xs-12 col-md-4">
+                                <div class="list">
+                                    <ul>
+                                        <span class="title">Leads</span>
+                                        <li class="lead-opts">
+                                            <label>...created during...</label>
+                                            <div class="preset-hours">
+                                                <!--<div class="btn-group">-->
+                                                    <!--<label class="btn btn-primary"-->
+                                                           <!--ng-model="ctrl.advancedOpts.onlyFromCTD"-->
+                                                           <!--ng-change="ctrl.unsavedAdvancedFilters = true"-->
+                                                           <!--btn-checkbox>-->
+                                                        <!--Only weekdays-->
+                                                    <!--</label>-->
+                                                <!--</div>-->
+                                                <div class="btn-group">
+                                                    <label class="btn btn-primary"
+                                                           ng-model="ctrl.advancedViewOpts.leadTime"
+                                                           ng-change="ctrl.viewOptsChanged('leadTime', 'all')"
+                                                           btn-radio="'all'"
+                                                           uncheckable >
+                                                        All hours
+                                                    </label>
+                                                    <label class="btn btn-primary"
+                                                           ng-model="ctrl.advancedViewOpts.leadTime"
+                                                           ng-change="ctrl.viewOptsChanged('leadTime', 'working')"
+                                                           btn-radio="'working'"
+                                                           uncheckable>
+                                                        9AM - 5PM
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <timepicker
+                                                    ng-model="ctrl.advancedOpts.leadTimeFirst"
+                                                    ng-change="ctrl.viewOptsChanged('leadTime')"
+                                                    readonly-input="true"
+                                                    show-minutes="true"
+                                                    minute-step="15">
+                                            </timepicker>
+                                            <timepicker
+                                                    ng-model="ctrl.advancedOpts.leadTimeLast"
+                                                    ng-change="ctrl.viewOptsChanged('leadTime')"
+                                                    readonly-input="true"
+                                                    show-minutes="true"
+                                                    minute-step="15">
+                                            </timepicker>
+                                        </li>
+                                        <li>
+                                            <label>...which are...</label>
+                                            <div class="btn-group">
+                                                <label class="btn btn-primary"
+                                                       ng-model="ctrl.advancedOpts.onlyConverted"
+                                                       ng-change="ctrl.viewOptsChanged(false)"
+                                                       btn-checkbox>
+                                                    Converted
+                                                </label>
+                                            </div>
+                                        </li>
+                                    </ul>
+
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-md-4">
+                                <div class="list">
+                                    <ul>
+                                        <span class="title">Calls</span>
+                                        <li class="lead-opts">
+                                            <label>...made during...</label>
+                                            <div class="preset-hours">
+                                                <!--<div class="btn-group">-->
+                                                    <!--<label class="btn btn-primary"-->
+                                                           <!--ng-model="ctrl.advancedOpts.onlyFromCTD"-->
+                                                           <!--ng-change="ctrl.unsavedAdvancedFilters = true"-->
+                                                           <!--btn-checkbox>-->
+                                                        <!--Only weekdays-->
+                                                    <!--</label>-->
+                                                <!--</div>-->
+                                                <div class="btn-group">
+                                                    <label class="btn btn-primary"
+                                                           ng-model="ctrl.advancedViewOpts.callTime"
+                                                           ng-change="ctrl.viewOptsChanged('callTime', 'all')"
+                                                           btn-radio="'all'"
+                                                           uncheckable>
+                                                        All hours
+                                                    </label>
+                                                    <label class="btn btn-primary"
+                                                           ng-model="ctrl.advancedViewOpts.callTime"
+                                                           ng-change="ctrl.viewOptsChanged('callTime', 'working')"
+                                                           btn-radio="'working'"
+                                                           uncheckable>
+                                                        9AM - 5PM
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            <timepicker
+                                                    ng-model="ctrl.advancedOpts.callTimeFirst"
+                                                    ng-change="ctrl.viewOptsChanged('callTime')"
+                                                    readonly-input="true"
+                                                    show-minutes="true"
+                                                    minute-step="15">
+
+                                            </timepicker>
+                                            <timepicker
+                                                    ng-model="ctrl.advancedOpts.callTimeLast"
+                                                    ng-change="ctrl.viewOptsChanged('callTime')"
+                                                    readonly-input="true"
+                                                    show-minutes="true"
+                                                    minute-step="15">
+                                            </timepicker>
+                                        </li>
+                                        <li>
+                                            <label>...which are...</label>
+                                            <div class="btn-group">
+                                                <label class="btn btn-primary"
+                                                       ng-model="ctrl.advancedOpts.onlyFromCTD"
+                                                       ng-change="ctrl.viewOptsChanged(false)"
+                                                       btn-checkbox>
+                                                    Originated from Click to Dial
+                                                </label>
+                                                <label class="btn btn-primary"
+                                                       ng-model="ctrl.advancedOpts.onlyConnects"
+                                                       ng-change="ctrl.viewOptsChanged(false)"
+                                                       btn-checkbox>
+                                                    Connects
+                                                </label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-xs-12 col-md-4">
+                                <div class="list thresholds">
+                                    <ul>
+                                        <span class="title">Thresholds</span>
+                                        <li>
+                                            <label>Maximum best response time</label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                       class="form-control"
+                                                       placeholder="120"
+                                                       ng-model="ctrl.advancedOpts.bestThreshold">
+                                                <span class="input-group-addon">minutes</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <label>Maximum worst response time</label>
+                                            <div class="input-group">
+                                                <input type="text"
+                                                       class="form-control"
+                                                       placeholder="720"
+                                                       ng-model="ctrl.advancedOpts.worstThreshold">
+                                                <span class="input-group-addon">minutes</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <button type="button"
+                                                    class="btn btn-primary"
+                                                    ng-click="ctrl.saveAdvancedOpts()">
+                                                Save
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="row pie-charts" ng-if="ctrl.pieCharts.length">
+            <div class="col-xs-12 divider-title">
+                <div><div>Stats</div></div>
+            </div>
+            <div class="col-xs-12 col-sm-4 text-center" ng-repeat="pieChart in ctrl.pieCharts">
+                <highchart config="pieChart.highchartObj"></highchart>
+                <div class="category" ng-bind-html="pieChart.category"></div>
+                <div class="description" ng-bind-html="pieChart.label"></div>
+            </div>
+        </div>
+
+    </section>
+    <section ng-show="ctrl.noCalls" class="ng-cloak">
+        <div class="row">
+            <div class="col-xs-12">
+                There are no calls logged during the selected time range. Try broadening the time range or selecting a different scope.
+            </div>
+        </div>
+    </section>
+    <call-stat-modal id="callStatModal"></call-stat-modal>
+</div>
+
+<style>
+@import url(https://fonts.googleapis.com/css?family=Titillium+Web:400,600,700,200,300,400italic,600italic,700italic,200italic,300italic);
+/* span text #808080
+/*background-color: rgba(68,138,192,1) blue; //448AC0
+    background-color: rgba(120,229,145,1); green 78E591*/
+.graph-filter-title {
+    line-height: 2.37;
+}
+.thresholds li {
+    margin: 20px 0;
+}
+
+.thresholds li:first-of-type {
+    margin-top: 0;
+}
+
+.thresholds li:last-child {
+    margin-top: 30px;
+    margin-bottom: 0;
+}
+
+.thresholds label {
+    margin-bottom: 15px;
+}
+
+.thresholds .input-group {
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.thresholds .input-group input {
+    border: 1px solid #ccc;
+}
+
+.panel-leads input[readonly]{
+    cursor: default;
+}
+
+.panel-leads .btn-primary,
+.panel-threshold .btn-primary{
+    color: #fff;
+    border-color: #333;
+    background: #7B7F8E;
+}
+
+.panel-leads .btn-group .btn-primary:focus,
+.panel-leads .btn-group .btn-primary:hover,
+.panel-leads .btn-group .btn-primary:active,
+.panel-leads .btn-group .btn-primary.active {
+    background-color: #fbfbfb;
+    border: 1px transparent solid;
+    color: rgba(60, 210, 143, 1);
+}
+
+.panel-leads .btn-primary:focus,
+.panel-leads .btn-primary:hover,
+.panel-leads .btn-primary:active,
+.panel-leads .btn-primary.active,
+.panel-threshold .btn-primary:focus,
+.panel-threshold .btn-primary:hover,
+.panel-threshold .btn-primary:active,
+.panel-threshold .btn-primary.active{
+    background: #fff;
+    border: 1px #7B7F8E solid;
+    color: #7B7F8E;
+}
+
+.panel-threshold input {
+    width: 300px;
+    margin-bottom: 10px;
+}
+
+.panel-leads .btn-link {
+    color: #7B7F8E;
+}
+
+.panel-leads .btn,
+.panel-threshold .btn {
+    border-radius: 4px!important;
+    transition: all .1s linear !important;
+}
+
+.panel-leads .btn-group>.btn:not(:first-child):not(:last-child) {
+    border-radius: 0!important;
+}
+
+.panel-leads .btn-group>.btn:first-child:not(:last-child):not(.dropdown-toggle) {
+    border-top-right-radius: 0!important;
+    border-bottom-right-radius: 0!important;
+}
+
+.panel-leads .btn-group>.btn:last-child:not(:first-child) {
+    border-top-left-radius: 0!important;
+    border-bottom-left-radius: 0!important;
+}
+
+.panel-leads td[ng-show=showMeridian] {
+    padding: 0;
+}
+
+.panel-leads td[ng-show=showMeridian] .btn{
+    border-radius: 0!important;
+    border: 0;
+    box-shadow: none;
+    width: 30px;
+    height:30px;
+    font-size: 13px;
+}
+
+.panel-leads td[ng-show=showMeridian] .btn:hover,
+.panel-leads td[ng-show=showMeridian] .btn:active,
+.panel-leads td[ng-show=showMeridian] .btn:focus{
+    background: transparent;
+}
+
+.panel-leads li {
+    text-align: center;
+}
+
+.panel-leads .lead-opts table:first-child {
+    float:left;
+}
+
+.panel-leads .lead-opts table:last-child {
+    float:right;
+}
+
+.panel-leads .lead-opts .preset-hours {
+    margin: 15px 0;
+}
+
+.panel-leads li label {
+    display: block;
+    text-align: center;
+    font-weight: 400;
+    font-size: 1.15em;
+}
+
+.panel-leads table {
+    width: auto;
+}
+
+.panel-leads .lead-opts table, .panel-leads .lead-opts>span{
+    display: inline-block;
+}
+
+
+@media screen and (max-width: 1200px) {
+
+    .panel-leads .lead-opts table:first-child,
+    .panel-leads .lead-opts table:last-child {
+        float:none;
+    }
+
+    .panel-leads .lead-opts>span {
+        display: none;
+    }
+}
+
+.panel-leads .lead-opts>span {
+    position: absolute;
+    height: 76px;
+    line-height: 76px;
+}
+
+.panel-leads tbody tr:first-child td, .panel-leads tbody tr:last-child td{
+    padding: 0;
+    font-size: 12px;
+    border: 0;
+    line-height: 1;
+    text-align: center;
+}
+
+.panel-leads tbody td .btn {
+    padding: 0;
+    font-size: 10px;
+}
+
+.panel-leads tbody td input[type=text] {
+    width: 40px!important;
+    padding: 3px;
+}
+
+.ld-panel .panel-body {
+    padding-bottom: 0;
+}
+
+.ld-panel .title {
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.advice {
+    border-radius: 7px;
+    background: #7B7F8E;
+    color: white;
+    font-size: 1.4em;
+    position: relative;
+    padding: 15px;
+    margin: 10px 5px;
+}
+.advice .high {
+    font-size: 1.4em;
+    font-weight: 700;
+}
+
+.advice:after {
+    content: "";
+    position: absolute;
+    top: -15px;
+    right: auto;
+    left: 45%;
+    border-width: 0 15px 15px;
+    border-color: #7B7F8E transparent;
+    border-style: solid;
+    display: block;
+    width: 0;
+}
+
+.panel-leads .fa-clock-o {
+    position: relative;
+    top: -14px;
+    color: #aaa;
+    font-size: 1.2em;
+}
+
+.panel-leads .response,  .panel-leads .response .value, .panel-leads .title, .panel-leads ul{
+    text-align: center;
+}
+
+.panel-leads .response .comparison {
+    font-size: 0.75em;
+    left: 4px;
+    top: 0;
+}
+
+.squares {
+    margin: 20px 0 25px;
+    padding: 0 30px;
+}
+
+.squares .square {
+    padding: 30px;
+    padding-right:5px;
+    font-size: 1.3em;
+    border: 1px solid #CED2DB;
+    border-right: 0;
+    text-align:center;
+}
+
+.squares>div:last-child .square {
+    border-right: 1px solid #CED2DB;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px
+}
+
+.squares>div:first-child .square {
+    border-bottom-left-radius: 10px;
+    border-top-left-radius: 10px
+}
+
+.squares>div {
+    padding: 0;
+}
+
+.square .number {
+    font-size: 1.5em
+}
+
+.panel-leads .title {
+    font-size: 1.3em;
+}
+
+.panel-leads .value {
+    font-size: 1.7em;
+    margin: -10px 0 0;
+}
+
+.panel-leads .value .number {
+    font-size: 3.5em;
+}
+
+.leads .comparison {
+    font-size: 0.5em;
+    position: relative;
+    top: -0.25em;
+    color: rgba(40, 230, 163, 1);
+}
+
+.leads {
+    position: relative;
+    z-index: 2;
+}
+
+.leads .comparison.red {
+    color: rgba(252, 15, 59, 1);
+}
+
+.leads .comparison:after {
+    content: '▲';
+    font-size: 0.6em;
+    position: relative;
+    top: -0.1em;
+}
+
+.leads .comparison.negative:after {
+    content: '▼';
+}
+
+.leads .comparison.same:after {
+    content: '' !important;
+}
+
+.timezone .tooltip {
+    width: 80px;
+}
+
+.weak li.active.timezone {
+    border: 1px solid #CED2DB;
+}
+
+.leaderboard .icon {
+    font-size: 2em;
+    opacity: 0.85;
+}
+
+.main-toolbar .dropdown-menu .divider {
+    border-bottom: none;
+}
+
+.main-toolbar input[type=text] {
+    border: 1px solid #ccc;
+}
+
+.timezone {
+    border-radius: 5px;
+    border: 1px solid #CED2DB;
+    margin-left: 10px!important;
+}
+
+.timezone>a {
+    padding: 3px 6px 3px 9px !important;
+    background: white!important;
+    background-color: white!important;
+    color: #808080!important;
+    width: 27px;
+}
+
+.timezone>a:hover, .timezone>a:active, .timezone>a:focus {
+    background: white!important;
+    background-color: white!important;
+    color: #808080!important;
+}
+
+.timezone .custom {
+    padding: 5px 10px;
+}
+
+.dropdown.dropdown-scroll .dropdown-menu {
+    max-height: 40vh;
+    overflow: auto;
+}
+
+.search-control {
+    padding: 5px 10px;
+}
+
+html {
+    background: white !important;
+    background-color: white !important;
+}
+
+.table-panel tbody td a {
+    position: relative;
+    z-index: 2;
+}
+
+.truncated {
+    line-height: 2.5em;
+    color: #394054;
+}
+
+.history-wrapper .panel-body {
+    padding: 0;
+}
+
+.single-user .pie-charts {
+    margin-top: 35px!important;
+}
+
+.user-table-wrapper .scrollableContainer {
+    padding-top: 71px;
+}
+
+.user-table-wrapper .scrollableContainer .headerSpacer {
+    height: 72px;
+}
+
+.user-table-wrapper .scrollArea table .th-inner {
+    height: 72px;
+}
+
+.user-table-wrapper .scrollArea table tr:nth-child(2) .th-inner {
+    top: 35px;
+}
+
+.user-table-wrapper table, .user-table-wrapper .panel.panel-default .panel-heading{
+    border: 1px solid #CED2DB;
+}
+
+.scrollArea {
+    border: 0;
+}
+
+.user-table-wrapper table {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+.user-table-wrapper .panel.panel-default {
+    border: 0;
+    box-shadow: none;
+}
+
+.scrollArea table th .box {
+    border: none;
+}
+
+.call-history table th .box, .call-history table tbody tr td {
+    border-right: 1px solid #d5d5d5;
+}
+
+.call-history table th:last-child .box {
+    border: none;
+}
+
+
+#main {
+    background: white;
+}
+
+.scrollableContainer {
+    height: 70vh;
+}
+
+.fullscreen .scrollableContainer {
+    height: 90vh;
+}
+
+.user-table-wrapper {
+    position: absolute;
+    width: 100%;
+    z-index: 2;
+    left: 0;
+    right: 0;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 20px;
+    margin-top: -30px !important;
+    max-width: 1300px;
+}
+
+
+.panel[tf-switcher].hide-outbound [col^="outbound"],
+.panel[tf-switcher].hide-inbound [col^="inbound"],
+.panel[tf-switcher].hide-outbound [ng-bind*="outbound"],
+.panel[tf-switcher].hide-inbound [ng-bind*="inbound"],
+.panel[tf-switcher].hide-outbound [hide-out],
+.panel[tf-switcher].hide-inbound [hide-in],
+.panel[tf-switcher].hide-leads [hide-leads],
+.table-panel.hide-target [col*="Target"],
+.table-panel.hide-target [ng-bind*="Target"],
+.table-panel.hide-target [hide-target]{
+    display: none;
+}
+
+.analytics-target-modal {
+    left: 50%;
+    bottom: auto;
+}
+
+.analytics-target-modal .modal-content{
+    box-shadow: none;
+    border: 0;
+}
+
+.analytics-target-modal .modal-dialog {
+    margin: 15px;
+}
+
+.time-cell {
+    width: 125px;
+    text-align: left;
+}
+
+tr[sortable]:not(.individual) > *{
+    cursor: pointer;
+}
+
+.an-container.loading-data {
+    opacity: 0.7;
+}
+
+.an-container {
+    transition: opacity 0.3s ease;
+}
+
+li.dropdown.active .caret {
+    border-top-color: #fff;
+    border-bottom-color: #fff;
+    opacity: 1;
+}
+
+.daterangepicker {
+    padding: 10px;
+}
+.daterangepicker .btn-success {
+    background-color: rgba(44,200,143,1);
+    border-color: rgba(44,200,143,1);
+}
+
+.daterangepicker td.active, .daterangepicker td.active:hover {
+  background-color: rgba(44,200,143,0.9);
+  border: 0;
+}
+
+.daterangepicker td.in-range {
+    background: rgba(44,200,143,0.3);
+}
+
+.daterangepicker .ranges ul {
+    margin: 0 5px;
+    width: auto;
+}
+.daterangepicker .input-mini, .daterangepicker .input-mini.active {
+  border: 1px solid #CED2DB;
+}
+
+.daterangepicker .ranges li {
+    background: white;
+    color: #444;
+    font-weight: 300;
+    border: 0;
+    padding: 1px;
+}
+
+.daterangepicker .ranges li.active, .daterangepicker .ranges li:hover {
+    background: white;
+    color: black;
+    font-weight: 600;
+    border: 0;
+}
+
+.time-frame > input {
+    width: 200px;
+    border-radius: 5px;
+    border: 1px solid #CED2DB;
+    padding: 5px;
+    background: transparent;
+    position: relative;
+    z-index: 3;
+}
+
+.time-frame .fa-calendar{
+    z-index: 2;
+    position: absolute;
+    right: 10px;
+    top: 9px;
+}
+
+
+.pie-charts {
+    text-align: center;
+}
+
+.pie-charts > div {
+    z-index: 3;
+}
+
+.pie-charts .highcharts-container {
+    margin-bottom: 0;
+    width: auto!important;
+}
+
+.pie-charts .category {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: -20px;
+    position: relative;
+    z-index: 4;
+}
+
+.pie-charts .description {
+    font-size: 2em;
+    font-weight: 300;
+    margin-top: 0;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 4;
+}
+
+.modal-open {
+    overflow: auto;
+}
+.fixed-scroll {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.table-panel::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+.table-panel::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background-color: rgba(0,0,0,.5);
+    box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+.fullscreen .table-panel {
+    max-height: 90vh;
+}
+
+@-webkit-keyframes appear {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@-moz-keyframes appear {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@-o-keyframes appear {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes appear {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 15;
+    margin: 0!important;
+    padding: 10px;
+    background: white;
+}
+
+.fullscreen div {
+    -webkit-animation: appear 0.5s;
+    -moz-animation:    appear 0.5s;
+    -o-animation:      appear 0.5s;
+    animation:         appear 0.5s;
+}
+
+#orgOverride {
+    width: 100px;
+    margin-top: 9px;
+}
+.leaderboard .metric {
+    margin: 0;
+    background: white;
+    color: #808080;
+    padding: 5px;
+    text-align: center;
+}
+
+.leaderboard .metric .title {
+    text-transform: uppercase;
+    opacity: 1;
+    letter-spacing: 2px;
+}
+
+.leaderboard .metric .name {
+    font-size: 1.2em;
+}
+
+.leaderboard .metric .desc {
+    font-style: italic;
+}
+
+.leads .metric.progress1 {
+    background: linear-gradient(to right, rgba(123, 127, 142, 1) 33%, rgba(123, 127, 142, 0.9) 33%);
+}
+
+.leads .metric.progress2 {
+    background: linear-gradient(to right, rgba(123, 127, 142, 1) 10%, rgba(123, 127, 142, 0.9) 10%);
+}
+
+.divider-title {
+    text-transform: uppercase;
+    font-weight: 300;
+    text-align: center;
+    margin-top: -20px;
+    margin-bottom: 15px;
+
+}
+.divider-title>div>div {
+    position: relative;
+    z-index: 2;
+    display: inline-block;
+    padding-left: 1em;
+    padding-right: 1em;
+    color: #808080;
+    vertical-align: middle;
+    background-color: white;
+    font-size: 15px;
+    line-height: 15px;
+}
+.divider-title>div:before {
+    position: relative;
+    top: 13px;
+    display: block;
+    content: "";
+    width: 100%;
+    height: 1px;
+    background-color: #CED2DB;
+    z-index: 2;
+}
+div#unsupported-browser-modal.modal.fade.in {
+    display: none!important;
+}
+.highcharts-container {
+    box-shadow: none;
+}
+.span12{
+    background: white;
+}
+.highchart-panel {
+    padding: 5px;
+}
+
+.as:after{
+    content: '\25B2';
+    position: relative;
+    font-size: 0.5em;
+    top: -1px;
+    left: 3px
+}
+
+.ds:after{
+    content: '\25BC';
+    position: relative;
+    font-size: 0.5em;
+    top: -1px;
+    left: 3px
+}
+.table-panel .totals {
+    font-weight: 600;
+}
+.left-border, .left-border .box {
+    border-left: 1px solid #CED2DB!important;
+}
+.table>thead>tr>th.ds,
+.table>thead>tr>th.as {
+    border-bottom: 2px solid #394054;
+    padding-bottom: 8px!important;
+}
+.table>thead>tr>th:not(.ds),
+.table>thead>tr>th:not(.as) {
+    padding-bottom: 9px;
+}
+.table>thead>tr>th{
+    border-right: 0;
+    border-bottom: 1px solid #CED2DB;
+}
+
+.table>tbody>td {
+    background: white;
+}
+
+.table-panel {
+    padding: 0;
+}
+.name-cell {
+    min-width: 200px;
+}
+.table {
+    margin-bottom: 0;
+}
+.table th {
+    background: white;
+}
+a {
+    cursor: pointer;
+}
+.user-actions {
+    margin-right: -10px;
+}
+.user-actions .export{
+    margin-right: 10px;
+}
+.nav.pull-up {
+    margin-top: -8px;
+}
+.nav .dropdown .dropdown-menu li a:hover {
+    background: #aaa;
+    color: white;
+}
+.dropdown-toggle {
+    cursor: pointer;
+}
+.nav .dropdown .dropdown-menu {
+    border-radius: 0;
+}
+.nav .dropdown .dropdown-toggle .caret {
+    margin-top: 0;
+    border-top-color: #808080;
+    border-bottom-color: #808080;
+}
+.nav .dropdown .dropdown-toggle:hover,
+.nav .dropdown .dropdown-toggle:active,
+.nav .dropdown .dropdown-toggle:focus {
+    border-color: #808080;
+}
+
+.nav .dropdown.open>a {
+    background: #aaa;
+}
+
+body {
+    background: white;
+}
+.weak li .no-hover:hover {
+    background: white;
+    cursor: default;
+}
+.weak {
+    display: inline-block
+}
+.weak li.active {
+    border: 1px solid transparent;
+}
+.export, .datepick {
+    border: 1px solid #ccc;
+}
+
+.datepick {
+    min-width: 80px;
+    text-align: center;
+}
+.nav-pills.weak li a{
+    padding: 4px 10px;
+    line-height: 1.5;
+    color: #808080;
+}
+.nav-pills.weak>li.active>a{
+    background-color: #7B7F8E;
+    color: white;
+}
+.nav-pills.weak.active li:hover a{
+    background-color: #9ab;
+    color: white;
+}
+.panel-title {
+    text-transform: uppercase;
+    color: #394054;
+    display: inline-block;
+}
+.panel-heading > ul {
+    float: right;
+    display: inline-block;
+}
+
+.graph-wrap .panel-heading .nav li.btn-group{
+    margin-right: 10px;
+    font-size: 14px;
+}
+.graph-wrap .panel-heading .nav li button {
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 3px;
+    color: #808080;
+    line-height: 1.5;
+}
+.graph-wrap .panel-heading .nav .btn-group .btn:first-child {
+    border-top-left-radius: 4px !important;
+    border-bottom-left-radius: 4px !important;
+}
+.graph-wrap .panel-heading .nav .btn-group .btn:last-child {
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 4px !important;
+}
+
+
+.graph-wrap .btn {
+    -webkit-border-radius: inherit!important;
+    border-radius: inherit!important;
+    border: 1px solid rgb(204, 204, 204);
+    margin: 2px 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+.graph-wrap .panel-body {
+    height: 400px;
+}
+
+.graph-wrap.fullscreen .panel-body {
+    height: 100%;
+}
+
+.an-container section > div, .an-container > div {
+    margin: 35px 0;
+}
+.metrics>div{
+    text-align: center;
+}
+.metric {
+    margin: 0 20px;
+    color: white;
+    padding: 25px 10px 25px 30px;
+    text-align: left;
+    background: #7B7F8E;
+}
+.metrics .m1 {
+    margin-left: 0;
+}
+
+.metrics .m4 {
+    margin-right: 0;
+}
+
+@media screen and (max-width: 1200px) {
+    .metric {
+        margin: 0;
+    }
+}
+
+.metric .title {
+    text-transform: uppercase;
+    opacity: 0.9;
+    letter-spacing: 2px;
+
+}
+.metric .number {
+    font-size: 2em;
+}
+#wrap {
+    font-family: 'Titillium Web', sans-serif!important;
+    background-color: white!important;
+    color: #808080;
+    height: 100%;
+}
+.panel-default {
+    display: block;
+}
+body {
+  font-family: 'Titillium Web', sans-serif!important;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+</style>
