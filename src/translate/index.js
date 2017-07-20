@@ -3,6 +3,8 @@ const fs = require('fs');
 
 const commonPhrases = require('../common.json');
 
+const ALLOWED_CHARS_GROUP = `(\\w|\\s|[:.,'()]|<br>)`;
+
 const {
   saveOutputFile,
   saveTranslations
@@ -47,21 +49,21 @@ function run(prefix) {
  */
 function searchForTranslations(text, prefix) {
   // "Tooltip" attribute occurences
-  const tooltipRegex = new RegExp(`(?:tooltip=")((?!${prefix}\.)(\\w|\\s|\.)+?)(?:")`, 'g');
+  const tooltipRegex = new RegExp(`(?:tooltip=")((?!${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:")`, 'g');
   const tooltipReplacementFunction = (text, context, key) => ` ng-i18next="[tooltip]${key}"`;
   const tooltips = getTranslatedElements(tooltipRegex, text, prefix, tooltipReplacementFunction);
 
   console.log(`Found ${tooltips.length} tooltip attributes to translate`);
 
   // "Title" attribute occurences
-  const titleRegex = new RegExp(`(?:title=")((?!${prefix}\.)(\\w|\\s|\.)+?)(?:")`, 'g');
+  const titleRegex = new RegExp(`(?:title=")((?!${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:")`, 'g');
   const titleReplacementFunction = (text, context, key) => ` ng-i18next="[title]${key}"`;
-  const titles = getTranslatedElements(titleRegex, text, prefix);
+  const titles = getTranslatedElements(titleRegex, text, prefix, titleReplacementFunction);
 
   console.log(`Found ${titles.length} title attributes to translate`);
 
   // Occurences in tags
-  const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)(\\w|\\s|\\.)+?)(?:\\n*<)`, 'g');
+  const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:\\n*<)`, 'g');
   const tagReplacementFunction = (text, context, key) => ` ng-i18next="${key}"><`;
   const tags = getTranslatedElements(tagRegex, text, prefix, tagReplacementFunction);
 
@@ -106,8 +108,14 @@ function buildTranslationObject (prefix, result, replacementFunction) {
 
   const sluggifiedText = _.kebabCase(text)
 
-  if (text !== '' && !commonPhrases[sluggifiedText]) {
-    const key = `${prefix}.${sluggifiedText}`;
+  if (text !== '') {
+    let key;
+    if(commonPhrases[sluggifiedText]) {
+      key = `i18n.common.${sluggifiedText}`;
+    } else {
+      key = `${prefix}.${sluggifiedText}`;
+    }
+
     const object = {
       key,
       context,
