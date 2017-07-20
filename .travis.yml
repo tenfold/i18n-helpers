@@ -1,0 +1,20 @@
+language: node_js
+node_js:
+- '6'
+cache:
+  yarn: true
+install:
+- npm i
+script:
+- npm run lint
+- npm run codacy
+before_deploy:
+- npm run build
+deploy:
+  provider: npm
+  email: bartosz.polanczyk@gmail.com
+  on:
+    branch: master
+  skip_cleanup: true
+  api_key:
+    secure: by28cl2o97YOenJkfPBp4eEwiVAPBxpF2A6S2cN/m8V+UeTypAuao/MnAsCoUuJezYDzDep32iOlyhsZVotSRryX0omCh/z7VSoashNRpN5Am/TnLnOvpZTgIJMtv3imaNjZTa3k4fJyvXFrP7GKpG5B66uhgD+yZjY/hsxam0KJUDHzPgAvHDoiHSrS7WfI/47XHwIwurYrkDQeDp7ZSCHOmvftpL+4DDEApA4efro/MH4+VnpoGg3l6tr9TCmN2IezdtjLKfuK2CSeBB+Pm1iUM9W5QDz9//p1X/AwUdpZZCg2HzpuafR0joCIF71OOjAKu5LY5iB/+LSKy2dL5u9KhdgLy9soxUPEQPVnu2RAHsTE8VySm9mI1ZFgl2chyupaFmkPRqpCF+w+gPWsNFAMHTacB7bIvLdNHQCpd+XCU6aK63DaUqh9EZE5drxcakHTTB4vxGzLatQJ1OP3hXXDu8CSCw6iiwzIW+NsxwgPaTgthhLxnec8EfAvcnh4kq71WFdQ3EQJtVi6Ux1HlUg4oSg0ZkVyMC5vp/PIq/GTcSOxtgNvW4RoCurIc5q8sWMrpNR64AQrpOWC7Bpzk6grRkZxaPtbmFeWxRSDKM8y/ZKlcfZgtpDk1Uz/4dkIS8du03V0uncPE+XEsC6aLudXrneihJE/A5cXqwoVN1Y=
