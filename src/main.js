@@ -1,26 +1,26 @@
-const inquirer = require('inquirer');
+import chalk from 'chalk';
+import commandLineCommands from 'command-line-commands';
+
+import merge from './merge';
+import translate from './translate';
+
+const validCommands = [null, 'merge', 'translate'];
 
 const {
-  run
-} = require('./src');
+  command,
+  argv,
+} = commandLineCommands(validCommands);
 
-console.log('*** Welcome in i18n tag helper! Please give a translation prefix');
+if (command === null) {
+  console.log(chalk`{red Valid commands:}
+    {blue ${validCommands.splice(1).join(', ')}}`);
+  process.exit(1);
+}
 
-var questions = [
-  {
-    type: 'input',
-    name: 'prefix',
-    message: 'Translation JSON prefix'
-  }
-];
+if (command === merge) {
 
-inquirer.prompt(questions).then((answers) => {
-  let {prefix} = answers;
-  prefix = prefix || 'i18n';
+}
 
-  console.log(`Running with prefix: ${prefix}`);
+if (command === translate) {
 
-  run(prefix);
-}).catch((err) => {
-  console.log(err);
-});
+}
