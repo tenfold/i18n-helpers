@@ -49,28 +49,39 @@
 //  */
 // function searchForTranslations(text, prefix) {
 //   // "Tooltip" attribute occurences
-//   const tooltipRegex = new RegExp(`(?:tooltip=")((?!${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:")`, 'g');
-//   const tooltipReplacementFunction = (text, context, key) => ` ng-i18next="[tooltip]${key}"`;
-//   const tooltips = getTranslatedElements(tooltipRegex, text, prefix, tooltipReplacementFunction);
+//   const tooltipRegex = new RegExp(`(?:tooltip=")
+//   ((?!${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:")`, 'g');
+//   const tooltipReplacementFunction =
+//   (text, context, key) => ` ng-i18next="[tooltip]${key}"`;
+//   const tooltips = getTranslatedElements(tooltipRegex, text,
+//   prefix, tooltipReplacementFunction);
 //
 //   console.log(`Found ${tooltips.length} tooltip attributes to translate`);
 //
 //   // "Title" attribute occurences
-//   const titleRegex = new RegExp(`(?:title=")((?!${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:")`, 'g');
-//   const titleReplacementFunction = (text, context, key) => ` ng-i18next="[title]${key}"`;
-//   const titles = getTranslatedElements(titleRegex, text, prefix, titleReplacementFunction);
+//   const titleRegex =
+//   new RegExp(`(?:title=")
+//   ((?!${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:")`, 'g');
+//   const titleReplacementFunction = (
+//   text, context, key) => ` ng-i18next="[title]${key}"`;
+//   const titles =
+//   getTranslatedElements(titleRegex, text, prefix, titleReplacementFunction);
 //
 //   console.log(`Found ${titles.length} title attributes to translate`);
 //
 //   // Occurences in tags
-//   const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)${ALLOWED_CHARS_GROUP}+)(?:\\n*<)`, 'g');
-//   const tagReplacementFunction = (text, context, key) => ` ng-i18next="${key}"><`;
-//   const tags = getTranslatedElements(tagRegex, text, prefix, tagReplacementFunction);
+//   const tagRegex = new RegExp(`(?:>\\n*)((?!<|${prefix}\.)
+//   ${ALLOWED_CHARS_GROUP}+)(?:\\n*<)`, 'g');
+//   const tagReplacementFunction =
+//   (text, context, key) => ` ng-i18next="${key}"><`;
+//   const tags =
+//   getTranslatedElements(tagRegex, text, prefix, tagReplacementFunction);
 //
 //   console.log(`Found ${tags.length} tags with text to translate`);
 //
 //   const translations = _.concat(tooltips, titles, tags);
-//   console.log(`Merged the translation objects. Total: ${translations.length}`);
+//   console.log(
+//   `Merged the translation objects. Total: ${translations.length}`);
 //
 //   return translations;
 // }
@@ -87,7 +98,8 @@
 //
 //   let result;
 //   while(result = regExp.exec(text)){
-//     const translationEntry = buildTranslationObject(prefix, result, replacementFunction);
+//     const translationEntry =
+//     buildTranslationObject(prefix, result, replacementFunction);
 //     if (translationEntry) {
 //       elements.push(translationEntry);
 //     }

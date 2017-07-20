@@ -1,4 +1,4 @@
-import {map} from 'lodash';
+import {transform} from 'lodash';
 
 /**
  * Merges original internationalization file with the translation
@@ -41,9 +41,11 @@ export default function merge(
  * @return {Object}          Merged translation
  */
 function mergeTranslation(original, target, placeholder, appendOriginal) {
+  return transform(original, (key, value) => {
 
+  }, {});
 }
 
-function generateReport() {
-  
-}
+// function generateReport() {
+//
+// }
