@@ -48,6 +48,5 @@ export default async function mergeCLI(files, args) {
     throw new Error('Cannot read translation file!');
   }
 
-  return await
-    merge(originalFile, translationFile, placeholder, appendOriginal);
+  return merge(originalFile, translationFile, placeholder, appendOriginal);
 }
