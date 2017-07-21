@@ -2,6 +2,26 @@
 
 A set of helpers useful when introducing `i18n` internationalization to the application.
 
+## Installation
+
+To install the package, just type:
+
+```
+
+npm i -g i18n-helpers
+
+```
+
+or, using `yarn`:
+
+```
+
+yarn global add i18n-helpers
+
+```
+
+`NodeJS 6.x` is required to use the package.
+
 ## Merge
 
 Merges original internationalization file (usually english) and translation file. Both files have to be in `JSON` format.
