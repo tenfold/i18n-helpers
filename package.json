@@ -1,6 +1,6 @@
 {
   "name": "i18n-helpers",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Helper to search for i18n occurences",
   "main": "index.js",
   "bin": {
