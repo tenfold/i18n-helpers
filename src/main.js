@@ -1,4 +1,4 @@
-#!/usr/bin/env 
+#!/usr/bin/env node
 
 import chalk from 'chalk';
 import commandLineCommands from 'command-line-commands';
