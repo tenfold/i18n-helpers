@@ -32,11 +32,12 @@ i18-helpers merge 'original.json' 'translation.json'
 
 The tool can be run with different flags:
 
-| `-a,--append-original`            | Flag depicting that the original translation should be appended after the placeholder                         |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `-i,--indent [value]`             | Indentation value used for building the resulting file. Check `JSON.stringify` documentation for the details. |
-| `-p,--placeholder [placeholder]`  | Custom placeholder. Default placeholder is `__I18N_MISSING__`                                                 |
-| `-v,--verbose`                    | Generates verbose report containing list of keys in particular groups                                         |
+| Flag                             | Description                                                                                                   |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `-a,--append-original`           | Flag depicting that the original translation should be appended after the placeholder                         |
+| `-i,--indent [value]`            | Indentation value used for building the resulting file. Check `JSON.stringify` documentation for the details. |
+| `-p,--placeholder [placeholder]` | Custom placeholder. Default placeholder is `__I18N_MISSING__`                                                 |
+| `-v,--verbose`                   | Generates verbose report containing list of keys in particular groups                                         |
 
 ### Example output
 
