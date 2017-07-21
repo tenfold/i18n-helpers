@@ -4,7 +4,7 @@
   "description": "A set of helpers for performing i18n translations",
   "main": "index.js",
   "bin": {
-    "i18n-helper": "lib/main.js"
+    "i18n-helpers": "lib/main.js"
   },
   "scripts": {
     "build": "rm -rf ./lib && babel src -d lib --ignore *.test.js",
