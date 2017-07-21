@@ -2,6 +2,6 @@
 original.json
 translation.json
 
-lib
+src
 node_modules
 output

@@ -11,7 +11,7 @@ const TRANSLATIONS_DIR = './translations';
  * @param  {String} fileName      Original fileName
  */
 function saveOutputFile(text, translations, fileName) {
-  text = new String(text); // Clone the input
+  text = String(text); // Clone the input
 
   for (let translation of translations) {
     const regExp = new RegExp(translation.context, 'ig');
@@ -39,7 +39,8 @@ function saveOutputFile(text, translations, fileName) {
  */
 function saveTranslations(translations, prefix) {
   translations = _.uniqBy(translations, 'key');
-  console.log(`Merged unique keys. Number of translations: ${translations.length}`);
+  console.log(
+    `Merged unique keys. Number of translations: ${translations.length}`);
 
   const output = {};
   _.each(translations, function(translation) {
@@ -53,10 +54,11 @@ function saveTranslations(translations, prefix) {
     fs.mkdirSync(TRANSLATIONS_DIR);
   }
 
-  fs.writeFileSync(`${TRANSLATIONS_DIR}/${prefix}.json`, JSON.stringify(output, null, 4));
+  fs.writeFileSync(
+    `${TRANSLATIONS_DIR}/${prefix}.json`, JSON.stringify(output, null, 4));
 }
 
 module.exports = {
   saveOutputFile,
-  saveTranslations
+  saveTranslations,
 };

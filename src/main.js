@@ -1,26 +1,40 @@
-const inquirer = require('inquirer');
+import chalk from 'chalk';
+import commandLineCommands from 'command-line-commands';
+import minimist from 'minimist';
+
+import packageFile from '../package.json';
+import merge from './merge';
+
+
+const validCommands = [null, 'merge'/* , 'translate' */];
 
 const {
-  run
-} = require('./src');
+  command,
+  argv,
+} = commandLineCommands(validCommands);
 
-console.log('*** Welcome in i18n tag helper! Please give a translation prefix');
-
-var questions = [
-  {
-    type: 'input',
-    name: 'prefix',
-    message: 'Translation JSON prefix'
+if (command === null) {
+  const options = minimist(argv);
+  if (options.version || options.v) {
+    console.log(chalk`{green version: ${packageFile.version}}`);
+    process.exit(0);
   }
-];
 
-inquirer.prompt(questions).then((answers) => {
-  let {prefix} = answers;
-  prefix = prefix || 'i18n';
+  console.log(chalk`{red valid commands:}
+    {blue ${validCommands.splice(1).join(', ')}}`);
+  process.exit(0);
+}
 
-  console.log(`Running with prefix: ${prefix}`);
+if (command === 'merge') {
+  const options = minimist(argv);
+  const files = options._;
 
-  run(prefix);
-}).catch((err) => {
-  console.log(err);
-});
+  (async function() {
+    try {
+      await merge(files, options);
+    } catch (err) {
+      console.log(chalk`{red ${err}}`);
+      process.exit(1);
+    }
+  })();
+}
