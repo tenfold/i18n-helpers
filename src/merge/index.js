@@ -1,7 +1,10 @@
 import asyncFs from 'fs';
+import chalk from 'chalk';
 import {promisifyAll} from 'bluebird';
 
 import merge from './merge';
+import report from './report';
+import scanMissing from './scan-missing';
 
 const fs = promisifyAll(asyncFs);
 
@@ -13,8 +16,8 @@ const fs = promisifyAll(asyncFs);
  */
 export default async function mergeCLI(files, args) {
   if (!files.length) {
-    console.log(
-      chalk`{green usage: i18-helpers merge [-a | -p] original translation}`);
+    console.log(chalk`{green usage: i18-helpers merge}` +
+      `{green [-a | -p | -v] original translation}`);
     return;
   }
 
@@ -29,24 +32,42 @@ export default async function mergeCLI(files, args) {
   const translationFileName = files[1];
 
   // Arguments
-  const placeholder = args.p | args.placeholder;
-  const appendOriginal = args.a | args['append-original'];
+  const placeholder = args.p || args.placeholder;
+  const appendOriginal = args.a || args['append-original'];
+  const verbose = args.v || args.verbose;
 
   // Get the files
-  let originalFile;
-  let translationFile;
+  const original = await getFile(originalFileName);
+  const translation = await getFile(translationFileName);
 
+  const {
+    mergedTranslation,
+    entries
+  } = merge(original, translation, placeholder, appendOriginal);
+
+  entries.missing = scanMissing(original, translation);
+
+  return;
+}
+
+/**
+ * Gets JSON file based on passed filename/path
+ * @param  {String} fileName    File name or the path
+ * @return {Promise<Object>}    Parsed JS object
+ */
+async function getFile(fileName) {
+  let file;
   try {
-    originalFile = (await fs.readFileAsync(originalFileName)).toString();
+    file = (await fs.readFileAsync(fileName)).toString();
+
+    try {
+      file = JSON.parse(file);
+    } catch (err) {
+      throw new Error(`File ${fileName} is not a valid JSON: ${err}`);
+    }
   } catch (err) {
-    throw new Error('Cannot read original file!');
+    throw new Error(`Cannot read file ${fileName}!`);
   }
 
-  try {
-    translationFile = (await fs.readFileAsync(translationFileName)).toString();
-  } catch (err) {
-    throw new Error('Cannot read translation file!');
-  }
-
-  return merge(originalFile, translationFile, placeholder, appendOriginal);
+  return file;
 }
