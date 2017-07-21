@@ -25,9 +25,11 @@
     "babel-runtime": "^6.23.0",
     "bluebird": "^3.5.0",
     "chalk": "^2.0.1",
+    "cli-table": "^0.3.1",
     "command-line-commands": "^2.0.1",
     "lodash": "^4.17.4",
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "table": "^4.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
