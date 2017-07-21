@@ -1,3 +1,5 @@
+#!/usr/bin/env 
+
 import chalk from 'chalk';
 import commandLineCommands from 'command-line-commands';
 import minimist from 'minimist';
