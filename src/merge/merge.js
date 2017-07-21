@@ -61,9 +61,8 @@ function mergeTranslation(
       }
 
       // Append new key to the originally passed path
-      path += `${key}.`;
-      return result[key] = mergeTranslation(
-        value, targetValue, entries, placeholder, appendOriginal, path);
+      return result[key] = mergeTranslation(value, targetValue,
+        entries, placeholder, appendOriginal, `${path}${key}.`);
     }
 
     // Plain value

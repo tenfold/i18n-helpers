@@ -7,17 +7,17 @@ import report from './report';
 import scanMissing from './scan-missing';
 
 const fs = promisifyAll(asyncFs);
+const OUTPUT_DIR = './output';
 
 /**
  * CLI handler for merge operation
  * @param  {Array} files  Input files
  * @param  {Object} args  Console arguments
- * @return {Promise}      Result of the operation
  */
 export default async function mergeCLI(files, args) {
   if (!files.length) {
     console.log(chalk`{green usage: i18-helpers merge}` +
-      `{green [-a | -p | -v] original translation}`);
+      chalk`{green  [-a | -p | -v | -i] original translation}`);
     return;
   }
 
@@ -32,8 +32,9 @@ export default async function mergeCLI(files, args) {
   const translationFileName = files[1];
 
   // Arguments
-  const placeholder = args.p || args.placeholder;
   const appendOriginal = args.a || args['append-original'];
+  const indentation = args.i || args.indent || 2;
+  const placeholder = args.p || args.placeholder;
   const verbose = args.v || args.verbose;
 
   // Get the files
@@ -42,12 +43,20 @@ export default async function mergeCLI(files, args) {
 
   const {
     mergedTranslation,
-    entries
+    entries,
   } = merge(original, translation, placeholder, appendOriginal);
 
   entries.missing = scanMissing(original, translation);
 
-  return;
+  // Simply write the file into a new directory
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    console.log(chalk`{green output dir does not exist, creating...}`);
+    fs.mkdirSync(OUTPUT_DIR);
+  }
+  await fs.writeFileAsync(`${OUTPUT_DIR}/${translationFileName}`,
+    JSON.stringify(mergedTranslation, null, indentation));
+
+  report(entries, verbose);
 }
 
 /**
