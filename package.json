@@ -29,6 +29,7 @@
     "bluebird": "^3.5.0",
     "chalk": "^2.0.1",
     "command-line-commands": "^2.0.1",
+    "csv-parse": "^1.2.1",
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "table": "^4.0.1"

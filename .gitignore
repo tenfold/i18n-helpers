@@ -3,5 +3,6 @@ original.json
 translation.json
 
 lib
+dev
 node_modules
 output
